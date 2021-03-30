@@ -1,0 +1,43 @@
+main {
+    display:flex;
+    justify-content: center;
+    background: url("../assets/register.jpg");
+    background-repeat: no-repeat;
+    background-position: center;
+    min-height: 1300px;
+    align-items: center;
+}
+main h2 {
+    text-align: center;
+}
+.form_main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: silver;
+    width: 80%;
+    height: -moz-available;
+    padding-bottom: 12px;
+    opacity: 0.90;
+    border: 4px solid rgb(231, 222, 222);
+}
+.col-md-4 {
+    width: 100%;
+}
+footer {
+    display: flex;
+    background-color: black;
+    color: white;
+}
+.submit_form {
+    text-align: center;
+}
+#invalidCheck {
+    float: none;
+}
+#groupomania_img {
+    max-width: 5%;
+}
+#copyright {
+    max-width: 2%;
+}
