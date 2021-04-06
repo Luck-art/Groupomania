@@ -19,14 +19,6 @@ module.exports = {
         const title = req.body.title;
         const content = req.body.content;
 
-        const obj = {
-                title,
-                content,
-                title_length: title.length,
-                content_length: content.length,
-            }
-            //return res.status(201).json(obj);
-
         if (title == null || content == null) {
             return res.status(400).json({ 'error': 'missing parameters' });
         }
@@ -51,8 +43,8 @@ module.exports = {
             //---------------------------------------On s'assure que le userFound est valide---------------------------//
             function(userFound, done) {
                 if (userFound) {
-                    console.log(title);
-                    console.log(content);
+                    /*console.log(title);
+                    console.log(content);*/
                     models.Message.create({
                             title: title,
                             content: content,
@@ -104,6 +96,51 @@ module.exports = {
         }).catch(function(err) {
             console.log(err);
             res.status(500).json({ "error": "invalid fields" });
+        });
+    },
+    //---------------------------------On permet aux utilisateurs des modifier leurs messages-------------------------//
+    updateMessage: function(req, res) {
+        // Getting auth header
+        const headerAuth = req.headers['authorization'];
+        const userId = jwtUtils.getUserId(headerAuth).userId;
+
+        // Params
+        const title = req.body.title;
+        const content = req.body.content;
+
+        asyncLib.waterfall([
+            function(done) {
+                models.Message.findOne({
+                    attributes: ['id', 'title', 'content'],
+                    where: { id: userId }
+                }).then(function(userFound) {
+                    done(null, userFound);
+                })
+
+                .catch(function(err) {
+                    return res.status(500).json({ 'error': 'unable to verify user' });
+                });
+            },
+            function(userFound, done) {
+                if (userFound) {
+                    userFound.update({
+                        title: (title ? title : userFound.title),
+                        content: (content ? content : userFound.content),
+                    }).then(function() {
+                        done(userFound);
+                    }).catch(function(err) {
+                        res.status(500).json({ 'error': 'cannot update user' });
+                    });
+                } else {
+                    res.status(404).json({ 'error': 'user not found' });
+                }
+            },
+        ], function(userFound) {
+            if (userFound) {
+                return res.status(201).json(userFound);
+            } else {
+                return res.status(500).json({ 'error': 'cannot update user message' });
+            }
         });
     }
 }

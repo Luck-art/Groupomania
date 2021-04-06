@@ -16,7 +16,8 @@ module.exports = (sequelize, DataTypes) => {
                 model: 'User',
                 key: 'id'
             }
-        }
+        },
+        isLike: DataTypes.INTEGER
     }, {});
     //-----------------------Ici, on fait une relation entre la table users & messages en passant par Like-----------//
 
@@ -29,8 +30,8 @@ module.exports = (sequelize, DataTypes) => {
 
         models.Message.belongsToMany(models.User, {
             through: models.Like,
-            foreignKey: 'userId',
-            otherKey: 'messageId',
+            foreignKey: 'messageId',
+            otherKey: 'userId',
         });
 
         //--------------------Ici, on fait le lien entre les clés étrangères et la table de référence-------------------//

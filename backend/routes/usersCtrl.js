@@ -46,14 +46,14 @@ module.exports = {
                         .then(function(userFound) {
                             done(null, userFound); // Le done est ici une fonction de callback
                         })
-                        .catch(function(err) {
+                        .catch(function(_err) {
                             return res.status(500).json({ 'error': 'unable to verify user' });
                         });
                 },
                 //-----------------------------On vérifie si le status userFound existe-----------------------------//
                 function(userFound, done) {
                     if (!userFound) {
-                        bcrypt.hash(password, 5, function(err, bcryptedPassword) {
+                        bcrypt.hash(password, 5, function(_err, bcryptedPassword) {
                             done(null, userFound, bcryptedPassword); // Le password hasher se trouve dans la variable bcryptedPassword 
                         });
                     } else {
@@ -61,7 +61,7 @@ module.exports = {
                     }
                 },
                 //------------------------------On crée le nouvel utilisateur---------------------------------------//
-                function(userFound, bcryptedPassword, done) {
+                function(_userFound, bcryptedPassword, done) {
                     const newUser = models.User.create({
                             email: email,
                             username: username,
@@ -72,7 +72,7 @@ module.exports = {
                         .then(function(newUser) {
                             done(newUser);
                         })
-                        .catch(function(err) {
+                        .catch(function(_err) {
                             return res.status(500).json({ 'error': 'cannot add user' });
                         });
                 }
@@ -106,13 +106,13 @@ module.exports = {
                     .then(function(userFound) {
                         done(null, userFound);
                     })
-                    .catch(function(err) {
+                    .catch(function(_err) {
                         return res.status(500).json({ 'error': 'unable to verify user' });
                     });
             },
             function(userFound, done) {
                 if (userFound) {
-                    bcrypt.compare(password, userFound.password, function(errBycrypt, resBycrypt) {
+                    bcrypt.compare(password, userFound.password, function(_errBycrypt, resBycrypt) {
                         done(null, userFound, resBycrypt);
                     });
                 } else {
@@ -137,6 +137,7 @@ module.exports = {
             }
         });
     },
+    //----------------------------------On permet de cibler un profil en particulié----------------------------------//
     getUserProfile: function(req, res) {
         // Getting auth header
         const headerAuth = req.headers['authorization'];
@@ -154,14 +155,15 @@ module.exports = {
             } else {
                 res.status(404).json({ 'error': 'user not found' });
             }
-        }).catch(function(err) {
+        }).catch(function(_err) {
             res.status(500).json({ 'error': 'cannot fetch user' });
         });
     },
+    //--------------------------------------------On permet de mettre à jour le profile---------------------------//
     updateUserProfile: function(req, res) {
         // Getting auth header
         const headerAuth = req.headers['authorization'];
-        const userId = jwtUtils.getUserId(headerAuth);
+        const userId = jwtUtils.getUserId(headerAuth).userId;
 
         // Params
         const bio = req.body.bio;
@@ -174,7 +176,7 @@ module.exports = {
                     }).then(function(userFound) {
                         done(null, userFound);
                     })
-                    .catch(function(err) {
+                    .catch(function(_err) {
                         return res.status(500).json({ 'error': 'unable to verify user' });
                     });
             },
@@ -184,7 +186,7 @@ module.exports = {
                         bio: (bio ? bio : userFound.bio)
                     }).then(function() {
                         done(userFound);
-                    }).catch(function(err) {
+                    }).catch(function(_err) {
                         res.status(500).json({ 'error': 'cannot update user' });
                     });
                 } else {
@@ -198,5 +200,52 @@ module.exports = {
                 return res.status(500).json({ 'error': 'cannot update user profile' });
             }
         });
+    },
+    //--------------------------------------------On permet de supprimer  le profile--------------------------------//
+    deleteUserProfile: function(req, res) {
+        // Getting auth header
+        const headerAuth = req.headers['authorization'];
+        const userId = jwtUtils.getUserId(headerAuth).userId;
+
+        // Params
+
+        asyncLib.waterfall([
+
+                function(done) {
+                    models.User.findOne({
+                            attributes: ['id'],
+                            where: { id: userId }
+                        }).then(function(userFound) {
+                            done(null, userFound);
+                        })
+                        .catch(function(_err) {
+                            return res.status(500).json({ 'error': 'unable to verify user' });
+                        });
+                },
+                function(userFound, done) {
+                    if (userFound) {
+                        models.User.destroy({
+                                where: {
+                                    id: userId
+                                }
+                            })
+                            .then(function() {
+                                done(userFound);
+                            }).catch(function(err) {
+                                res.status(500).json({ 'error': 'cannot delete user' });
+                            });
+                    } else {
+                        res.status(404).json({ 'error': 'user not found' });
+                    }
+                },
+            ]
+            /*, function(userFound) {
+                        if (userFound) {
+                            return res.status(201).json(userFound);
+                        } else {
+                            return res.status(500).json({ 'error': 'cannot delete user profile' });
+                        }*/
+        );
+
     }
 }
