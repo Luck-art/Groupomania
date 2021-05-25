@@ -1,46 +1,56 @@
 nav {
     color: white;
 }
+
 aside {
     margin-top: 1%;
 }
+
 aside h2 {
     text-decoration: underline black;
 }
+
 footer {
     display: flex;
     background-color: black;
     color: white;
 }
+
 #groupomania_img {
     max-width: 5%;
 }
+
 #banniere {
     width: 100%;
     height: auto;
 }
-/* The hero image */
-.hero-image {
-  /* Use "linear-gradient" to add a darken background effect to the image (photographer.jpg). This will make the text easier to read */
-  background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5));
 
-  /* Position and center the image to scale nicely on all screens */
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-  position: relative;
+
+/* The hero image */
+
+.hero-image {
+    /* Use "linear-gradient" to add a darken background effect to the image (photographer.jpg). This will make the text easier to read */
+    background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5));
+    /* Position and center the image to scale nicely on all screens */
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    position: relative;
 }
+
 
 /* Place text in the middle of the image */
+
 .hero-text {
-  text-align: center;
-  position: absolute;
-  top: 20%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: white;
+    text-align: center;
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
 }
-.accordion {
+
+.collapsible {
     background-color: #eee;
     color: #444;
     cursor: pointer;
@@ -49,24 +59,25 @@ footer {
     text-align: left;
     border: none;
     outline: none;
-    transition: 0.4s;
-  }
-  
-  /* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
-  .active, .accordion:hover {
+}
+
+.active,
+.collapsible:hover {
     background-color: #ccc;
-  }
-  
-  /* Style the accordion panel. Note: hidden by default */
-  .panel {
+}
+
+.inside_collapsible {
     padding: 0 18px;
     background-color: white;
-    display: none;
+    max-height: 0;
     overflow: hidden;
-  }
-  .top_aside {
+    transition: max-height 0.2s ease-out;
+}
+
+.top_aside {
     text-align: center;
-  }
-  #copyright {
-      max-width: 2%;
-  }
+}
+
+#copyright {
+    max-width: 2%;
+}
