@@ -43,8 +43,6 @@ module.exports = {
             //---------------------------------------On s'assure que le userFound est valide---------------------------//
             function(userFound, done) {
                 if (userFound) {
-                    /*console.log(title);
-                    console.log(content);*/
                     models.Message.create({
                             title: title,
                             content: content,
@@ -129,7 +127,7 @@ module.exports = {
                     }).then(function() {
                         done(userFound);
                     }).catch(function(err) {
-                        res.status(500).json({ 'error': 'cannot update user' });
+                        res.status(500).json({ 'error': 'cannot update message' });
                     });
                 } else {
                     res.status(404).json({ 'error': 'user not found' });
@@ -142,5 +140,68 @@ module.exports = {
                 return res.status(500).json({ 'error': 'cannot update user message' });
             }
         });
-    }
+    },
+    //-------------------------------On permet aux utilisateurs de supprimer leurs/les messages-------------------------//
+    deleteMessage: function(req, res) {
+        // Getting auth header
+        const headerAuth = req.headers['authorization'];
+        const userId = jwtUtils.getUserId(headerAuth).userId;
+        // Params
+        const id = req.params.id
+
+        asyncLib.waterfall([
+
+            function(done) {
+                models.User.findOne({
+                        attributes: ['id', 'isAdmin'],
+                        where: { id: userId }
+                    }).then(function(userFound) {
+                        done(null, userFound);
+                    })
+                    .catch(function() {
+                        return res.status(500).json({ 'error': 'unable to verify user' });
+                    });
+            },
+            function(userFound, done) {
+                models.Message.findOne({
+                        where: { id }
+                    }).then(function(messageFound) {
+                        const data = { userFound, messageFound };
+                        done(null, data);
+                    })
+                    .catch(function() {
+                        return res.status(500).json({ 'error': 'unable to find message' });
+                    });
+            },
+            function(data, done) {
+                let canDelete = false;
+                if (userId === data.messageFound.UserId) {
+                    canDelete = true;
+                } else {
+                    if (data.userFound.isAdmin === true) {
+                        canDelete = true;
+                    } else {
+                        return res.status(403).json({ 'error': 'You are not an administrator !' });
+                    }
+                }
+
+                if (canDelete === true) {
+                    data.messageFound.destroy({ where: { id } })
+                        .then(function(messageFound) {
+                            done(messageFound);
+                        })
+                        .catch(function() {
+                            return res.status(500).json({ 'error': 'unable to delete message !' });
+                        });
+                }
+
+            }
+        ], function(messageFound) {
+            if (messageFound) {
+                return res.status(204).json({ message: 'Message successfully deleted' });
+            } else {
+                return res.status(500).json({ 'error': 'cannot delete user message' });
+            }
+        });
+    },
 }
