@@ -2,6 +2,7 @@
 const models = require('../models');
 const asyncLib = require('async');
 const jwtUtils = require('../utils/utils');
+const { sequelize } = require('../models');
 
 // Constants
 const titleLimit = 2;
@@ -11,8 +12,9 @@ const itemsLimit = 50;
 // Routes
 module.exports = {
     createMessage: function(req, res) {
+        //return res.status(200).json({ body: req.body, headers: req.headers })
         // Authentification du header
-        const headerAuth = req.headers['authorization'];
+        const headerAuth = req.headers.authorization;
         const userId = jwtUtils.getUserId(headerAuth).userId;
 
         // Paramètres
@@ -66,40 +68,80 @@ module.exports = {
         });
     },
     listMessage: function(req, res) { // On liste tous les messages
+        const headerAuth = req.headers.authorization;
+        const userId = jwtUtils.getUserId(headerAuth).userId;
         const fields = req.query.fields; // Sert à sélectionner les colonnes qu'on veux afficher
         const limit = parseInt(req.query.limit); // Permet de récupérer les messages par segmentation
         const offset = parseInt(req.query.offset); // Permet de récupérer les messages par segmentation
         const order = req.query.order; // Permet de récupérer les messages dans un ordre
 
+
+
         if (limit > itemsLimit) {
             limit = itemsLimit;
         }
-        models.Message.findAll({ // on fait des tests sur nos attributs
-            order: [(order != null) ? order.split(':') : ['title', 'ASC']],
-            attributes: (fields !== '*' && fields != null) ? fields.split(',') : null,
-            limit: (!isNaN(limit)) ? limit : null,
-            offset: (!isNaN(offset)) ? offset : null,
-            include: [{ // On inclus l'implémentation direct avec la table users
-                model: models.User,
-                attributes: ['username']
-            }]
+        asyncLib.waterfall([
+            //--------------------------------------On récupère l'utilisateur dans la base de donnée-------------------//
+            function(done) {
+                models.User.findOne({
+                        where: { id: userId }
+                    })
+                    .then(function(userFound) {
+                        done(null, userFound);
+                    })
+                    .catch(function(err) {
+                        return res.status(500).json({ 'error': 'unable to verify user' });
+                    });
+            },
+            //---------------------------------------On s'assure que le userFound est valide---------------------------//
+            function(userFound, done) {
+                if (userFound) {
+                    models.Message.findAndCountAll({ // on fait des tests sur nos attributs
+                        order: [(order != null) ? order.split(':') : ['createdat', 'DESC']],
+                        //attributes: (fields !== '*' && fields != null) ? fields.split(',') : null,
+                        limit: (!isNaN(limit)) ? limit : null,
+                        offset: (!isNaN(offset)) ? offset : null,
+                        include: [{ // On inclus l'implémentation direct avec la table users
+                            model: models.User,
+                            attributes: ['username']
+                        }]
 
-        }).then(function(messages) {
-            if (messages) {
-                res.status(200).json(messages);
+
+
+                    }).then(function(messages) {
+                        if (messages) {
+                            //done(null, messages);
+                            res.status(200).json(messages);
+                        } else {
+                            res.status(404).json({ "error": "no messages found" });
+                        }
+
+                    }).catch(function(err) {
+                        console.log(err);
+                        res.status(500).json({ "error": "invalid fields" });
+                    });
+                } else {
+                    res.status(404).json({ 'error': 'user not found' });
+                }
+            },
+            /* function(messages, done) {
+                            messages.
+                        }*/
+
+            //---------------------------------------On crée le nouveau message-----------------------------------------//
+        ], function(newMessage) {
+            if (newMessage) {
+                return res.status(201).json(newMessage);
             } else {
-                res.status(404).json({ "error": "no messages found" });
+                return res.status(500).json({ 'error': 'cannot post message' });
             }
-
-        }).catch(function(err) {
-            console.log(err);
-            res.status(500).json({ "error": "invalid fields" });
         });
+        console.log(fields)
     },
     //---------------------------------On permet aux utilisateurs des modifier leurs messages-------------------------//
     updateMessage: function(req, res) {
         // Getting auth header
-        const headerAuth = req.headers['authorization'];
+        const headerAuth = req.headers['Authorization'];
         const userId = jwtUtils.getUserId(headerAuth).userId;
 
         // Params
@@ -144,7 +186,7 @@ module.exports = {
     //-------------------------------On permet aux utilisateurs de supprimer leurs/les messages-------------------------//
     deleteMessage: function(req, res) {
         // Getting auth header
-        const headerAuth = req.headers['authorization'];
+        const headerAuth = req.headers['Authorization'];
         const userId = jwtUtils.getUserId(headerAuth).userId;
         // Params
         const id = req.params.id
