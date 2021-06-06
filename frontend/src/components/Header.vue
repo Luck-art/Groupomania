@@ -11,11 +11,17 @@
                       <li class="nav-item">
                         <router-link class="nav-link" aria-current="page" to="/">Accueil</router-link>
                       </li>
-                      <li class="nav-item">
-                        <router-link class="nav-link" to="/register">S'enregistrer</router-link>
-                      </li>
-                      <li class="nav-item">
-                        <router-link class="nav-link" to ="/identify">S'identifier</router-link>
+                      <p>{{ $store.state.userId }}</p>
+                      <div class="d-flex" v-if="$store.state.userId === 0">
+                        <li class="nav-item">
+                          <router-link class="nav-link" to="/register">S'enregistrer</router-link>
+                        </li>
+                        <li class="nav-item">
+                          <router-link class="nav-link" to ="/identify">S'identifier</router-link>
+                        </li>
+                      </div>
+                      <li v-else class="nav-item">
+                        <router-link class="nav-link" to ="/forum">Mon compte</router-link>
                       </li>
                       <li class="nav-item">
                         <router-link class="nav-link" to ="/forum">Forum</router-link>

@@ -9,3 +9,15 @@ export default {
     name: 'Footer'
 }
 </script>
+
+<style scoped>
+    footer {
+    display: flex;
+    background-color: black;
+    color: white;
+    }
+    
+    #copyright {
+    max-width: 2%;
+}
+</style>
