@@ -15,7 +15,9 @@ module.exports = {
         //return res.status(200).json({ body: req.body, headers: req.headers })
         // Authentification du header
         const headerAuth = req.headers.authorization;
+        console.log(headerAuth);
         const userId = jwtUtils.getUserId(headerAuth).userId;
+        console.log(userId);
 
         // Paramètres
         const title = req.body.title;
@@ -39,6 +41,7 @@ module.exports = {
                         done(null, userFound);
                     })
                     .catch(function(err) {
+                        console.log(err);
                         return res.status(500).json({ 'error': 'unable to verify user' });
                     });
             },
@@ -49,7 +52,7 @@ module.exports = {
                             title: title,
                             content: content,
                             likes: 0,
-                            UserId: userFound.id
+                            UserId: userFound.id,
                         })
                         .then(function(newMessage) {
                             done(newMessage);
@@ -109,6 +112,7 @@ module.exports = {
 
 
                     }).then(function(messages) {
+                        console.log(messages);
                         if (messages) {
                             //done(null, messages);
                             res.status(200).json(messages);
@@ -138,13 +142,17 @@ module.exports = {
         });
         console.log(fields)
     },
-    //---------------------------------On permet aux utilisateurs des modifier leurs messages-------------------------//
+    //---------------------------------On permet aux utilisateurs de modifier leurs messages-------------------------//
     updateMessage: function(req, res) {
         // Getting auth header
-        const headerAuth = req.headers['Authorization'];
+        console.log('debug updateMessage');
+        const headerAuth = req.headers.authorization;
+        console.log(headerAuth);
         const userId = jwtUtils.getUserId(headerAuth).userId;
+        console.log(userId);
 
         // Params
+        const id = req.params.id;
         const title = req.body.title;
         const content = req.body.content;
 
@@ -152,8 +160,9 @@ module.exports = {
             function(done) {
                 models.Message.findOne({
                     attributes: ['id', 'title', 'content'],
-                    where: { id: userId }
+                    where: { id }
                 }).then(function(userFound) {
+                    console.log(userFound);
                     done(null, userFound);
                 })
 
@@ -167,6 +176,7 @@ module.exports = {
                         title: (title ? title : userFound.title),
                         content: (content ? content : userFound.content),
                     }).then(function() {
+                        //console.log(userFound);
                         done(userFound);
                     }).catch(function(err) {
                         res.status(500).json({ 'error': 'cannot update message' });
@@ -186,8 +196,12 @@ module.exports = {
     //-------------------------------On permet aux utilisateurs de supprimer leurs/les messages-------------------------//
     deleteMessage: function(req, res) {
         // Getting auth header
-        const headerAuth = req.headers['Authorization'];
+        console.log('debug deleteMessage');
+        const headerAuth = req.headers.authorization;
+        console.log(headerAuth);
         const userId = jwtUtils.getUserId(headerAuth).userId;
+        console.log(userId);
+
         // Params
         const id = req.params.id
 
@@ -195,9 +209,10 @@ module.exports = {
 
             function(done) {
                 models.User.findOne({
-                        attributes: ['id', 'isAdmin'],
+                        attributes: ['id'],
                         where: { id: userId }
                     }).then(function(userFound) {
+                        console.log(userFound);
                         done(null, userFound);
                     })
                     .catch(function() {
@@ -205,6 +220,7 @@ module.exports = {
                     });
             },
             function(userFound, done) {
+                console.log(id);
                 models.Message.findOne({
                         where: { id }
                     }).then(function(messageFound) {

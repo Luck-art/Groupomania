@@ -20,12 +20,12 @@
                           <router-link class="nav-link" to ="/identify">S'identifier</router-link>
                         </li>
                       </div>
-                      <li v-else class="nav-item">
-                        <router-link class="nav-link" to ="/forum">Mon compte</router-link>
-                      </li>
-                      <li class="nav-item">
-                        <router-link class="nav-link" to ="/forum">Forum</router-link>
-                      </li>
+                        <li v-else class="nav-item">
+                          <router-link class="nav-link" to ="/myaccount">Mon compte</router-link>
+                        </li>
+                        <li class="nav-item">
+                          <router-link class="nav-link" to="/forum">Forum</router-link>
+                        </li>
                     </ul>
                   </div>
                 </div>

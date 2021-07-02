@@ -28,6 +28,12 @@ const routes = [{
         component: () =>
             import ('../views/Forum.vue')
     },
+    {
+        path: '/myaccount',
+        name: 'Myaccount',
+        component: () =>
+            import ('../views/Myaccount.vue')
+    },
 ]
 
 const router = new VueRouter({

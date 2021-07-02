@@ -168,12 +168,14 @@ module.exports = {
 
         // Params
         const bio = req.body.bio;
-        const isAdmin = req.body.isAdmin;
+        const email = req.body.email;
+        const username = req.body.username;
+
 
         asyncLib.waterfall([
             function(done) {
                 models.User.findOne({
-                        attributes: ['id', 'bio', 'isAdmin'],
+                        attributes: ['id', 'bio', 'email', 'username'],
                         where: { id: userId }
                     }).then(function(userFound) {
                         done(null, userFound);
@@ -186,7 +188,8 @@ module.exports = {
                 if (userFound) {
                     userFound.update({
                         bio: (bio ? bio : userFound.bio),
-                        isAdmin: (isAdmin ? isAdmin : userFound.isAdmin)
+                        email: (email ? email : userFound.email),
+                        username: (username ? username : userFound.username),
                     }).then(function() {
                         done(userFound);
                     }).catch(function(_err) {
@@ -211,6 +214,7 @@ module.exports = {
         const userId = jwtUtils.getUserId(headerAuth).userId;
 
         // Params
+        console.log(userId);
 
         asyncLib.waterfall([
 
@@ -242,9 +246,9 @@ module.exports = {
             },
             function(userFound, done) {
                 if (userFound) {
-                    userFound.destroy({
+                    models.User.destroy({
                             where: {
-                                id: userId
+                                Id: userId
                             }
                         })
                         .then(function(userFound) {

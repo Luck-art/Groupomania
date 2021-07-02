@@ -20,7 +20,7 @@ exports.router = (function() {
     // Messages routes
     apiRouter.route('/messages/').post(messagesCtrl.createMessage);
     apiRouter.route('/messages/').get(messagesCtrl.listMessage);
-    apiRouter.route('/messages/').put(messagesCtrl.updateMessage);
+    apiRouter.route('/messages/:id').put(messagesCtrl.updateMessage);
     apiRouter.route('/messages/:id').delete(messagesCtrl.deleteMessage);
 
     // Likes routes
