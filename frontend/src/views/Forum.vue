@@ -7,7 +7,7 @@
         </div> 
         </section>
         <main>
-            <h3>Voici les derniers messages:</h3>
+            <h3 class="main_title">Voici les derniers messages:</h3>
             <!--<div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvas" aria-labelledby="offcanvasLabel">-->
                 <div class="card text-center main_container">
                     <div class="card-body bg-light container_card"  v-for="(message) in messages" :key="message.id">
@@ -16,12 +16,18 @@
                         </div>
                         <h3 class="card-title">{{ message.title }}</h3>
                         <div class="card-text">{{ message.content }}</div>
-                        <p>{{ message.UserId }}</p>
-                        <p>Likes: {{ message.likes }}</p>
+                            <p>{{ message.UserId }}</p>
+                        <div class="container-like">
+                            <button type="button" v-if="$store.state.userId !== message.UserId && alreadyLiked(message) === false " @click="likeMessage(message.id)" class="btn btn-primary button_like">Liker le message</button>
+                            <button type="button" v-if="$store.state.userId !== message.UserId && alreadyLiked(message) === true" @click="dislikeMessage(message.id)" class="btn btn-primary">Retirer le like</button>
+
+                            <p>Likes: {{ message.likes }}</p>
+                        </div>
                         <p class="card-footer text-muted">{{ formatDate(message.createdAt) }}</p>
-                        <div v-if="$store.state.userId === message.UserId ">
-                            <button type="button" class="btn btn-secondary selectButton" @click="selectMessage(message)">Sélectionner le message</button>
-                            <button type="button" class="btn btn-danger" v-if="$store.state.userId === UserId.isAdmin" @click="deleteMessage(message.id)">Supprimer le message</button>
+                        <div >
+                            <button type="button" v-if="$store.state.userId === message.UserId " class="btn btn-secondary selectButton" @click="selectMessage(message)">Sélectionner le message</button>
+                            <button type="button" class="btn btn-danger" v-if="$store.state.isAdmin === true"  @click="deleteMessage(message)">Supprimer le message</button>
+                            <button type="button" class="btn btn-danger" v-if="$store.state.userId === message.UserId"  @click="deleteMessage(message)">Supprimer le message</button>
                         </div>
                     </div>
                 </div>
@@ -33,13 +39,13 @@
             <nav aria-label="Page navigation example">
                 <ul class="pagination">
                     <li class="page-item">
-                    <a class="page-link" href="#" aria-label="Previous">
+                    <a class="page-link" @click="goTo(currentPage - 1)"  aria-label="Previous">
                         <span aria-hidden="true">&laquo;</span>
                     </a>
                     </li>
                     <li class="page-item" v-for="(page) in pages" :key="page"><a class="page-link" v-on:click="goTo(page)">{{ page }}</a></li>
                     <li class="page-item">
-                    <a class="page-link" href="#" aria-label="Next">
+                    <a class="page-link" @click="goTo(currentPage + 1)"  aria-label="Next">
                         <span aria-hidden="true">&raquo;</span>
                     </a>
                     </li>
@@ -50,7 +56,7 @@
         
        
         <aside>
-            <form class="row g-3 the_form">
+            <form class="row g-3 form">
                 <h2>Exprimez vous!</h2>
                 <div class="input-group mb-3">
                     <span class="input-group-text" id="inputGroup-sizing-default">Titre</span>
@@ -60,9 +66,10 @@
                     <label for="exampleFormControlTextarea1" class="form-label">Example textarea</label>
                     <textarea class="form-control" id="exampleFormControlTextarea1" v-model="content" rows="3"></textarea>
                 </div>
-                <div class="col-12" v-for="(message) in messages" :key="message.id">
-                    <button class="btn btn-primary buttonSend" v-if="isSelected === false" type="button" @click="submitMessage">Envoyer</button>
-                    <button class="btn btn-primary buttonModify" v-else type="button" @click="modifyMessage(message.id)">Modifier</button>
+                <div class="col-12">
+                    <button class="btn btn-primary" v-if="isSelected === false" type="button" @click="submitMessage">Envoyer</button>
+                    <button class="btn btn-primary" v-else type="button" @click="modifyMessage">Modifier</button>
+                    <button class="btn btn-primary cancelModify" v-if="isSelected === true" type="button" @click="cancelModify">Annuler</button>
                 </div>
             </form>
         </aside>
@@ -86,7 +93,8 @@ export default {
             offset: 0, // page * limit - une fois limit
             total: 0,  
             currentPage: 1,
-            pages: 0
+            pages: 0,
+            selectedId: null
         }
     },
     mounted: function() {
@@ -101,10 +109,12 @@ export default {
                 this.pages = Math.round(this.total / this.limit) 
                 console.log(this.messages);
             });
+            if (this.$store.state.token === null) {
+                    router.push('/identify');
+                }
     },
     methods: {
         submitMessage: function() {
-            console.log(this.$store.state.token);
                 axios.post('http://localhost:8081/api/messages/', {
                     content: this.content,
                     title: this.title,
@@ -114,9 +124,8 @@ export default {
                             "Authorization" : `Bearer ${this.$store.state.token}`
                             },
                     })
-                .then(response => {
+                .then(() => {
                     this.flashMessage.success({title: 'Succes !', message: 'Votre message a bien été enregistré !'});
-                    console.log(response);
                 })
                 .catch(error => {
                     error.response
@@ -127,9 +136,15 @@ export default {
             this.isSelected = true;
             this.title = message.title;
             this.content = message.content;
+            this.selectedId = message.id;
+            const top = document.querySelector('.form').offsetTop;
+            window.scrollTo({
+                top,
+                behavior: 'smooth'
+            })
         },
-        modifyMessage: function(id) {
-            axios.put('http://localhost:8081/api/messages/' + id, {
+        modifyMessage: function() {
+            axios.put('http://localhost:8081/api/messages/' + this.selectedId, {
                     title: this.title,
                     content: this.content,
                 },
@@ -138,25 +153,79 @@ export default {
                             "Authorization" : `Bearer ${this.$store.state.token}`
                             },
                     })
-                .then(response => {
+                .then(() => {
                     this.flashMessage.success({title: 'Succes !', message: 'Vos modifications ont bien été enregistrés !'});
-                    console.log(response);
                 })
                 .catch(error => {
                     error.response
                     this.flashMessage.error({title: 'Erreur !', message: 'Une erreur est survenue !'});
                 });
         },
-        deleteMessage: function(id) {
-            axios.delete('http://localhost:8081/api/messages/' + id,
+        cancelModify: function() {
+            this.isSelected = false; 
+            this.title = '';
+            this.content = '';
+            const top = document.querySelector('.main_title').offsetTop;
+            window.scrollTo({
+                top,
+                behavior: 'smooth'
+            })
+        },
+        deleteMessage: function(message) {
+            let text = "Votre message a bien été supprimé !"
+            if (message.UserId !== this.$store.state.userId) {
+                text = "Le message de l'utilisateur a bien été supprimé !";
+            }
+            axios.delete('http://localhost:8081/api/messages/' + message.id,
                     {
                     headers: {
                             "Authorization" : `Bearer ${this.$store.state.token}`
                             },
                     })
-                .then(response => {
-                    this.flashMessage.success({title: 'Succes !', message: 'Votre message a bien été supprimer !'});
-                    console.log(response);
+                .then(() => {
+                    this.flashMessage.success({title: 'Succes !', message: text});
+                })
+                .catch(error => {
+                    error.response
+                    this.flashMessage.error({title: 'Erreur !', message: 'Une erreur est survenue !'});
+                });
+        },
+        likeMessage: function(id) {
+            axios.post('http://localhost:8081/api/messages/' + id + '/vote/like', {
+
+            },
+                    {
+                    headers: {
+                            "Authorization" : `Bearer ${this.$store.state.token}`
+                            },
+                    })
+                .then(() => {
+                    this.flashMessage.success({title: 'Succes !', message: 'Message liker !'});
+                })
+                .catch(error => {
+                    error.response
+                    this.flashMessage.error({title: 'Erreur !', message: 'Une erreur est survenue !'});
+                });
+        },
+        alreadyLiked: function(message) {
+            for (const user of message.Users) {
+                if (user.Like.userId === this.$store.state.userId && user.Like.isLike === 1) {
+                    return true
+                }
+            }
+            return false
+        },
+        dislikeMessage: function(id) {
+            axios.post('http://localhost:8081/api/messages/' + id + '/vote/dislike', {
+
+            },
+                    {
+                    headers: {
+                            "Authorization" : `Bearer ${this.$store.state.token}`
+                            },
+                    })
+                .then(() => {
+                    this.flashMessage.success({title: 'Succes !', message: 'Message disliké !'});
                 })
                 .catch(error => {
                     error.response
@@ -171,8 +240,9 @@ export default {
             return formatedDate.toLocaleDateString();
         },
         goTo: function(page)  {
-            /*console.log(page);
-            console.log(this);*/
+            if (page <= 0 || page > this.pages) {
+                return;
+            }
             this.currentPage = page;
             this.offset = page * this.limit - this.limit;
             router.push("/forum?page=" + page);
@@ -217,7 +287,12 @@ export default {
         width: auto;
         box-shadow: 0px 0px , -0.4em 0 .4em rgb(155, 155, 151);
     }
-    .the_form {
+    .container-like {
+        display:flex;
+        justify-content:center;
+        align-items:baseline;
+    }
+    .form {
         max-width: 90%;
         min-width: 75%;     
         background-color: rgb(131, 131, 206);
@@ -226,7 +301,14 @@ export default {
     .selectButton {
         margin-right: 15px;
     }
-    /*.pagination {
+    .cancelModify {
+        margin-left: 15px;
+    }
+    .button_like {
+        margin-right: 15px;
+    }
+    .pagination {
         justify-content: center;
-    }*/
+        margin-top: 15px;
+    }
 </style>

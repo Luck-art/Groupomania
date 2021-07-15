@@ -67,7 +67,8 @@
 </template>
 
 <script>
-import { axios } from '@/plugins/axios'
+import { axios } from '@/plugins/axios';
+import router from '@/router';
 
 export default {
     data: function() {
@@ -78,6 +79,9 @@ export default {
         }
     },
     async created() {
+        if (this.$store.state.token === null) {
+                        router.push('/');
+                    }
         const data = (await axios.get(
             'http://localhost:8081/api/users/' + this.$store.state.userId,
                 {

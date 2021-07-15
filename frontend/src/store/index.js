@@ -9,7 +9,8 @@ export default new Vuex.Store({
     state: { // Les données incluses dans le store
         userId: 0,
         token: null,
-        username: null
+        username: null,
+        isAdmin: false
     },
     getters: { // Permet de faire des modifications en se basant sur le state (par ex resultat du state X 2)
 
@@ -25,6 +26,9 @@ export default new Vuex.Store({
         },
         SET_USERNAME(state, username = this.username) {
             state.username = String(username);
+        },
+        SET_IS_ADMIN(state, isAdmin = this.isAdmin) {
+            state.isAdmin = Boolean(isAdmin);
         }
 
     },
@@ -37,6 +41,9 @@ export default new Vuex.Store({
         },
         setUsername({ commit }, username) {
             commit('SET_USERNAME', username);
+        },
+        setIsAdmin({ commit }, isAdmin) {
+            commit('SET_IS_ADMIN', isAdmin);
         }
 
     },

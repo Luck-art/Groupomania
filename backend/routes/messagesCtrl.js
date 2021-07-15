@@ -204,12 +204,12 @@ module.exports = {
 
         // Params
         const id = req.params.id
-
+        
         asyncLib.waterfall([
 
             function(done) {
                 models.User.findOne({
-                        attributes: ['id'],
+                        attributes: ['id', 'isAdmin'],
                         where: { id: userId }
                     }).then(function(userFound) {
                         console.log(userFound);

@@ -24,8 +24,8 @@ exports.router = (function() {
     apiRouter.route('/messages/:id').delete(messagesCtrl.deleteMessage);
 
     // Likes routes
-    apiRouter.route('/messages/:messageId/vote/like').post(likesCtrl.likePost);
-    apiRouter.route('/messages/:messageId/vote/dislike').post(likesCtrl.dislikePost);
+    apiRouter.route('/messages/:id/vote/like').post(likesCtrl.likePost);
+    apiRouter.route('/messages/:id/vote/dislike').post(likesCtrl.dislikePost);
 
     return apiRouter;
 })();

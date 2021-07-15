@@ -52,6 +52,7 @@
 <script>
     import { axios } from '@/plugins/axios'
     //import axios from 'axios';
+    import router from '@/router';
     
     
     export default {
@@ -72,14 +73,15 @@
                     password: this.password
                 })
                     .then(response => {
-                        this.login = response.data.users
+                        //this.login = response.data.users
                         this.flashMessage.success({title: 'Succes !', message: 'Vous êtes connecté !'});
                         
                         
                         this.$store.dispatch('setUserId', response.data.userId);
                         this.$store.dispatch('setToken', response.data.token);
                         this.$store.dispatch('setUsername', JSON.parse(response.config.data).username);
-                        console.log(response);
+                        this.$store.dispatch('setIsAdmin', response.data.isAdmin);
+                        router.push('/forum');
                         
                     })
                     .catch(error => {
