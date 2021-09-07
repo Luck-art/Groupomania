@@ -4,21 +4,7 @@
             <FlashMessage :position="'right bottom'"></FlashMessage>
             <form class="row g-3 needs-validation  form_main" novalidate>
                 <h2>S'identifier</h2>
-                <div class="col-md-4">
-                    <label for="validationCustom01" class="form-label">Pseudo</label>
-                    <input type="text" class="form-control" id="validationCustom01" v-model="username" required>
-                    <div class="valid-feedback">
-                        Ok!
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <label for="validationCustom02" class="form-label">Mot de passe</label>
-                    <input type="password" class="form-control" id="validationCustom02" v-model="password" required>
-                    <div class="valid-feedback">
-                        Ok!
-                    </div>
-                </div>
-                <div class="col-md-4">
+                 <div class="col-md-4">
                     <label for="validationCustomUsername" class="form-label">Email</label>
                     <div class="input-group has-validation">
                         <span class="input-group-text" id="inputGroupPrepend">@</span>
@@ -26,6 +12,13 @@
                         <div class="invalid-feedback">
                             Veuillez entrer un email valide.
                         </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <label for="validationCustom02" class="form-label">Mot de passe</label>
+                    <input type="password" class="form-control" id="validationCustom02" v-model="password" required>
+                    <div class="valid-feedback">
+                        Ok!
                     </div>
                 </div>
                 <div class="submit_form">
@@ -61,7 +54,6 @@
         data: function() {
             return {
                 email: '',
-                username: '',
                 password: '' 
             } 
         },
@@ -69,7 +61,6 @@
             login: function() {
                 axios.post('http://localhost:8081/api/users/login/', {
                     email: this.email,
-                    username: this.username,
                     password: this.password
                 })
                     .then(response => {
@@ -79,7 +70,7 @@
                         
                         this.$store.dispatch('setUserId', response.data.userId);
                         this.$store.dispatch('setToken', response.data.token);
-                        this.$store.dispatch('setUsername', JSON.parse(response.config.data).username);
+                        this.$store.dispatch('setUsername', response.data.username);
                         this.$store.dispatch('setIsAdmin', response.data.isAdmin);
                         router.push('/forum');
                         

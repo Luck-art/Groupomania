@@ -112,7 +112,7 @@ module.exports = {
 
 
                     }).then(function(messages) {
-                        console.log(messages);
+                        //console.log(messages);
                         if (messages) {
                             //done(null, messages);
                             res.status(200).json(messages);

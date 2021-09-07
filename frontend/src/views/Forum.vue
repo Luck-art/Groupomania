@@ -1,6 +1,6 @@
 <template>
     <div>
-        <FlashMessage :position="'right bottom'"></FlashMessage>
+        <FlashMessage :position="'right top'"></FlashMessage>
         <section>
         <div class="chip">
             <h2>Bienvenue {{ username }}  !</h2>
@@ -15,15 +15,14 @@
                             {{ message.id }}
                         </div>
                         <h3 class="card-title">{{ message.title }}</h3>
-                        <div class="card-text">{{ message.content }}</div>
+                        <div class="card-text" v-html="message.content"></div>
                             <p>{{ message.UserId }}</p>
                         <div class="container-like">
                             <button type="button" v-if="$store.state.userId !== message.UserId && alreadyLiked(message) === false " @click="likeMessage(message.id)" class="btn btn-primary button_like">Liker le message</button>
                             <button type="button" v-if="$store.state.userId !== message.UserId && alreadyLiked(message) === true" @click="dislikeMessage(message.id)" class="btn btn-primary">Retirer le like</button>
-
                             <p>Likes: {{ message.likes }}</p>
                         </div>
-                        <p class="card-footer text-muted">{{ formatDate(message.createdAt) }}</p>
+                        <p class="card-footer text-muted">Message crée le: {{ formatDate(message.createdAt) }}</p>
                         <div >
                             <button type="button" v-if="$store.state.userId === message.UserId " class="btn btn-secondary selectButton" @click="selectMessage(message)">Sélectionner le message</button>
                             <button type="button" class="btn btn-danger" v-if="$store.state.isAdmin === true"  @click="deleteMessage(message)">Supprimer le message</button>
@@ -62,10 +61,20 @@
                     <span class="input-group-text" id="inputGroup-sizing-default">Titre</span>
                     <input type="text" class="form-control" v-model="title" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default">
                 </div>
-                <div class="mb-3">
-                    <label for="exampleFormControlTextarea1" class="form-label">Example textarea</label>
-                    <textarea class="form-control" id="exampleFormControlTextarea1" v-model="content" rows="3"></textarea>
-                </div>
+                <editor
+                    v-model="content"
+                    :init="{
+                        plugins: [
+                            'advlist autolink lists link image charmap print preview anchor',
+                            'searchreplace visualblocks code fullscreen',
+                            'insertdatetime media table paste code help wordcount'
+                        ],
+                        toolbar:
+                            'undo redo | formatselect | bold italic backcolor | \
+                            alignleft aligncenter alignright alignjustify | \
+                            bullist numlist outdent indent | removeformat | help'
+                    }">
+                </editor>
                 <div class="col-12">
                     <button class="btn btn-primary" v-if="isSelected === false" type="button" @click="submitMessage">Envoyer</button>
                     <button class="btn btn-primary" v-else type="button" @click="modifyMessage">Modifier</button>
@@ -80,6 +89,8 @@
 <script>
 import { axios } from '@/plugins/axios';
 import router from '@/router';
+import Editor from '@tinymce/tinymce-vue'
+
 
 export default {
     data: function() {
@@ -96,6 +107,10 @@ export default {
             pages: 0,
             selectedId: null
         }
+    },
+    name: 'app',
+    components: {
+        'editor': Editor
     },
     mounted: function() {
         axios.get(
@@ -125,6 +140,7 @@ export default {
                             },
                     })
                 .then(() => {
+                    this.goTo(1);
                     this.flashMessage.success({title: 'Succes !', message: 'Votre message a bien été enregistré !'});
                 })
                 .catch(error => {
@@ -154,6 +170,7 @@ export default {
                             },
                     })
                 .then(() => {
+                    this.goTo(this.currentPage);
                     this.flashMessage.success({title: 'Succes !', message: 'Vos modifications ont bien été enregistrés !'});
                 })
                 .catch(error => {
@@ -183,6 +200,7 @@ export default {
                             },
                     })
                 .then(() => {
+                    this.goTo(this.currentPage);
                     this.flashMessage.success({title: 'Succes !', message: text});
                 })
                 .catch(error => {
@@ -200,6 +218,7 @@ export default {
                             },
                     })
                 .then(() => {
+                    this.goTo(this.currentPage);
                     this.flashMessage.success({title: 'Succes !', message: 'Message liker !'});
                 })
                 .catch(error => {
@@ -225,6 +244,7 @@ export default {
                             },
                     })
                 .then(() => {
+                    this.goTo(this.currentPage);
                     this.flashMessage.success({title: 'Succes !', message: 'Message disliké !'});
                 })
                 .catch(error => {
@@ -238,6 +258,10 @@ export default {
         formatDate: function(date) {
             const formatedDate = new Date(date);
             return formatedDate.toLocaleDateString();
+        },
+        formatDateModified: function(date) {
+            const formatedDateModified = new Date(date);
+            return formatedDateModified.toLocaleDateString();
         },
         goTo: function(page)  {
             if (page <= 0 || page > this.pages) {
@@ -256,7 +280,7 @@ export default {
                 this.total = response.data.count;
                 this.pages = Math.round(this.total / this.limit);
             });
-        },  
+        }, 
     }
 }
 </script>
