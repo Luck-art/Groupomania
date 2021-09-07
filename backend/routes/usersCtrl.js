@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt');
 const jwtUtils = require('../utils/utils');
 const models = require('../models');
 const asyncLib = require('async');
+const { json } = require('sequelize');
 
 // Regex
 
@@ -123,14 +124,16 @@ module.exports = {
                 if (resBycrypt) {
                     done(userFound);
                 } else {
-                    return res.status(403).json({ 'error': 'invalid password' });
+                    return res.status(401).json({ 'error': 'invalid password' });
                 }
             }
         ], function(userFound) {
             if (userFound) {
                 return res.status(201).json({
                     'userId': userFound.id,
-                    'token': jwtUtils.generateTokenForUser(userFound)
+                    'token': jwtUtils.generateTokenForUser(userFound),
+                    'isAdmin': userFound.isAdmin,
+                    'username': userFound.username
                 });
             } else {
                 return res.status(500).json({ 'error': 'cannot log on user' });
@@ -167,11 +170,14 @@ module.exports = {
 
         // Params
         const bio = req.body.bio;
+        const email = req.body.email;
+        const username = req.body.username;
+
 
         asyncLib.waterfall([
             function(done) {
                 models.User.findOne({
-                        attributes: ['id', 'bio'],
+                        attributes: ['id', 'bio', 'email', 'username'],
                         where: { id: userId }
                     }).then(function(userFound) {
                         done(null, userFound);
@@ -183,7 +189,9 @@ module.exports = {
             function(userFound, done) {
                 if (userFound) {
                     userFound.update({
-                        bio: (bio ? bio : userFound.bio)
+                        bio: (bio ? bio : userFound.bio),
+                        email: (email ? email : userFound.email),
+                        username: (username ? username : userFound.username),
                     }).then(function() {
                         done(userFound);
                     }).catch(function(_err) {
@@ -208,44 +216,58 @@ module.exports = {
         const userId = jwtUtils.getUserId(headerAuth).userId;
 
         // Params
+        console.log(userId);
 
         asyncLib.waterfall([
 
-                function(done) {
-                    models.User.findOne({
-                            attributes: ['id'],
-                            where: { id: userId }
-                        }).then(function(userFound) {
+            function(done) {
+                models.User.findOne({
+                        attributes: ['id'],
+                        where: { id: userId }
+                    }).then(function(userFound) {
+                        done(null, userFound);
+                    })
+                    .catch(function(_err) {
+                        return res.status(500).json({ 'error': 'unable to verify user' });
+                    });
+            },
+            function(userFound, done) {
+                if (userFound) {
+                    models.Message.destroy({
+                            where: {
+                                UserId: userId
+                            }
+                        })
+                        .then(function() {
                             done(null, userFound);
                         })
                         .catch(function(_err) {
-                            return res.status(500).json({ 'error': 'unable to verify user' });
+                            return res.status(500).json({ 'error': 'unable to delete messages !' });
                         });
-                },
-                function(userFound, done) {
-                    if (userFound) {
-                        models.User.destroy({
-                                where: {
-                                    id: userId
-                                }
-                            })
-                            .then(function() {
-                                done(userFound);
-                            }).catch(function(err) {
-                                res.status(500).json({ 'error': 'cannot delete user' });
-                            });
-                    } else {
-                        res.status(404).json({ 'error': 'user not found' });
-                    }
-                },
-            ]
-            /*, function(userFound) {
-                        if (userFound) {
-                            return res.status(201).json(userFound);
-                        } else {
-                            return res.status(500).json({ 'error': 'cannot delete user profile' });
-                        }*/
-        );
-
-    }
+                }
+            },
+            function(userFound, done) {
+                if (userFound) {
+                    models.User.destroy({
+                            where: {
+                                Id: userId
+                            }
+                        })
+                        .then(function(userFound) {
+                            done(userFound);
+                        }).catch(function(err) {
+                            res.status(500).json({ 'error': 'cannot delete user' });
+                        });
+                } else {
+                    res.status(404).json({ 'error': 'user not found' });
+                }
+            },
+        ], function(userFound) {
+            if (userFound) {
+                return res.status(204).json({ message: 'User successfully deleted' });
+            } else {
+                return res.status(500).json({ 'error': 'cannot update user profile' });
+            }
+        });
+    },
 }
