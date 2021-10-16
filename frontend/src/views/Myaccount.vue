@@ -24,7 +24,7 @@
                     </div>
                     <div class="col-md-4 username">
                         <label for="validationCustom01" class="form-label">Username</label>
-                        <input type="text" class="form-control" id="validationCustom01" v-model="user.username" required>
+                        <input type="text" class="form-control" id="validationCustom01" pattern="[a-zA-Z-]{2,15}" v-model="user.username" required>
                         <div class="invalid-feedback">
                             Veuillez choisir un username valide.
                         </div>
