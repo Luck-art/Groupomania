@@ -25,8 +25,7 @@
                         <p class="card-footer text-muted">Message crée le: {{ formatDate(message.createdAt) }}</p>
                         <div >
                             <button type="button" v-if="$store.state.userId === message.UserId " class="btn btn-secondary selectButton" @click="selectMessage(message)">Sélectionner le message</button>
-                            <button type="button" class="btn btn-danger" v-if="$store.state.isAdmin === true"  @click="deleteMessage(message)">Supprimer le message</button>
-                            <button type="button" class="btn btn-danger" v-if="$store.state.userId === message.UserId"  @click="deleteMessage(message)">Supprimer le message</button>
+                            <button type="button" class="btn btn-danger" v-if="$store.state.userId === message.UserId || $store.state.isAdmin === true"  @click="deleteMessage(message)">Supprimer le message</button>
                         </div>
                     </div>
                 </div>
